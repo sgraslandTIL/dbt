@@ -1,0 +1,43 @@
+models:
+  - name: stg_jaffle_shop_customers
+    description: >-
+      Customer staging model for Jaffle Shop, with one row per customer.
+      Renames the source id to customer_id and passes through first and last
+      names without filtering. Provides customer attributes for downstream
+      customer marts and the customer key used to relate orders to customers.
+    columns:
+      - name: customer_id
+        description: >-
+          Unique, non-null customer identifier, renamed from id in the
+          jaffle_shop.customers source. Used to join customer attributes to
+          orders through customer_id.
+        data_tests:
+          - unique
+          - not_null
+      - name: first_name
+        description: >-
+          Customer's first name, passed through unchanged from the
+          jaffle_shop.customers source for display in downstream customer marts.
+      - name: last_name
+        description: >-
+          Customer's last name, passed through unchanged from the
+          jaffle_shop.customers source for display in downstream customer marts.
+
+  - name: stg_jaffle_shop_orders
+    columns:
+      - name: order_id
+        data_tests:
+          - unique
+          - not_null
+      - name: order_status
+        description: "{{ doc('order_status') }}"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['placed', 'shipped', 'completed', 'returned', 'return_pending']
+      - name: customer_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop_customers')
+                field: customer_id
